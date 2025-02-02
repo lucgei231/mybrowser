@@ -143,30 +143,26 @@
             span.textContent = name;
             tab.appendChild(span);
 
-            // Prevent renaming the "New Tab" button
-            if (name !== 'New Tab') {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = name;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = name;
+            input.style.display = 'none';
+            input.addEventListener('blur', () => {
+                const tabData = tabs.find(t => t.url === url);
+                if (tabData) {
+                    tabData.name = input.value;
+                    span.textContent = input.value;
+                }
                 input.style.display = 'none';
-                input.addEventListener('blur', () => {
-                    const tabData = tabs.find(t => t.url === url);
-                    if (tabData) {
-                        tabData.name = input.value;
-                        span.textContent = input.value;
-                    }
-                    input.style.display = 'none';
-                    span.style.display = 'inline';
-                });
-                tab.appendChild(input);
+                span.style.display = 'inline';
+            });
+            tab.appendChild(input);
 
-                // Enable renaming the tab on click
-                tab.addEventListener('dblclick', () => {
-                    span.style.display = 'none';
-                    input.style.display = 'inline';
-                    input.focus();
-                });
-            }
+            tab.addEventListener('dblclick', () => {
+                span.style.display = 'none';
+                input.style.display = 'inline';
+                input.focus();
+            });
 
             // Add close button (X)
             const closeBtn = document.createElement('span');
