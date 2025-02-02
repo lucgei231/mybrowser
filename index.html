@@ -134,6 +134,7 @@
 
         let tabs = [];
 
+        // Function to create a tab
         function createTab(name, url, isNewTab = false) {
             const tab = document.createElement('div');
             tab.classList.add('tab');
@@ -181,20 +182,30 @@
             }
         }
 
+        // Function to activate a tab and load its URL
         function activateTab(tab, url) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             iframe.src = url;
+
+            // Save the current URL in the input when switching tabs
+            const activeTab = tabs.find(t => t.url === url);
+            if (activeTab) {
+                urlInput.value = activeTab.url.replace('https://', ''); // Keep it clean for user input
+            }
+
             tabs.forEach(t => t.active = false);
             tabs.find(t => t.url === url).active = true;
         }
 
+        // Function to add a new tab
         function addTab() {
             const newTab = { name: 'New Tab', url: 'about:blank', active: false };
             tabs.push(newTab);
             createTab(newTab.name, newTab.url, true);
         }
 
+        // Function to close a tab
         function closeTab(event, url) {
             event.stopPropagation();  // Prevent tab click action
             const tabElement = event.target.closest('.tab');
@@ -212,7 +223,7 @@
         }
 
         // Handle URL input
-        urlInput.addEventListener('change', () => {
+        urlInput.addEventListener('input', () => {
             const url = `https://${urlInput.value}`;
             const activeTab = tabs.find(t => t.active);
             if (activeTab) {
