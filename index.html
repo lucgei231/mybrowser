@@ -186,12 +186,11 @@
         function activateTab(tab, url) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            iframe.src = url;
 
-            // Save the current URL in the input when switching tabs
             const activeTab = tabs.find(t => t.url === url);
             if (activeTab) {
-                urlInput.value = activeTab.url.replace('https://', ''); // Keep it clean for user input
+                iframe.src = activeTab.url;
+                urlInput.value = activeTab.url.replace('https://', '');
             }
 
             tabs.forEach(t => t.active = false);
