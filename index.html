@@ -127,8 +127,8 @@
         const restoreBtn = document.getElementById('restore-btn');
         const newTabBtn = document.getElementById('new-tab-btn');
 
-        let tabs = [];
-        let activeTab = null;
+        let tabs = [];  // Store tabs as objects
+        let activeTabIndex = 0;
 
         // Function to create a tab
         function createTab(name, url, isNewTab = false) {
@@ -145,7 +145,7 @@
             input.value = name;
             input.style.display = 'none';
             input.addEventListener('blur', () => {
-                const tabData = tabs.find(t => t.url === url);
+                const tabData = tabs[activeTabIndex];
                 if (tabData) {
                     tabData.name = input.value;
                     span.textContent = input.value;
@@ -183,16 +183,16 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
 
-            activeTab = tabs.find(t => t.url === url);
-            if (activeTab) {
-                iframe.src = activeTab.url;
-                urlInput.value = activeTab.url.replace('https://', '');
+            activeTabIndex = tabs.findIndex(t => t.url === url);
+            if (activeTabIndex !== -1) {
+                iframe.src = tabs[activeTabIndex].url;
+                urlInput.value = tabs[activeTabIndex].url.replace('https://', '');
             }
         }
 
         // Function to add a new tab
         function addTab() {
-            const newTab = { name: 'New Tab', url: 'about:blank', active: false };
+            const newTab = { name: 'New Tab', url: 'about:blank' };
             tabs.push(newTab);
             createTab(newTab.name, newTab.url, true);
         }
@@ -214,11 +214,11 @@
             }
         }
 
-        // Handle URL input
+        // Handle URL input and update iframe content
         urlInput.addEventListener('input', () => {
             const url = `https://${urlInput.value}`;
-            if (activeTab) {
-                activeTab.url = url;  // Save URL as a variable
+            if (tabs[activeTabIndex]) {
+                tabs[activeTabIndex].url = url;  // Save URL as a variable
                 iframe.src = url;     // Load the URL in the iframe
             }
         });
