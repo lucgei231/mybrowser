@@ -89,6 +89,21 @@
             z-index: 9999;
             border: none;
         }
+        .restore-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #FF5733;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+        .restore-btn:hover {
+            background-color: #C0392B;
+        }
     </style>
 </head>
 <body>
@@ -108,11 +123,14 @@
     <input type="text" id="urlInput" placeholder="Enter URL here" oninput="updateIframe()">
     <iframe id="iframe" src="" title="Iframe"></iframe>
 
+    <button class="restore-btn" id="restoreBtn" onclick="restoreIframe()">Restore</button>
+
     <script>
         let tabCount = 1;
         const tabURLs = {}; // Object to store URLs for each tab
         const iframe = document.getElementById('iframe');
         const urlInput = document.getElementById('urlInput');
+        const restoreBtn = document.getElementById('restoreBtn');
 
         // Automatically adds 'https://' if missing and updates the iframe
         function updateIframe() {
@@ -192,11 +210,21 @@
                 iframe.classList.remove('fullscreen');
                 iframe.style.width = '80%';
                 iframe.style.height = '80%';
+                restoreBtn.style.display = 'none'; // Hide the restore button when exiting fullscreen
             } else {
                 iframe.classList.add('fullscreen');
                 iframe.style.width = '100vw';
                 iframe.style.height = '100vh';
+                restoreBtn.style.display = 'block'; // Show the restore button when in fullscreen
             }
+        }
+
+        // Restore the iframe to its normal size
+        function restoreIframe() {
+            iframe.classList.remove('fullscreen');
+            iframe.style.width = '80%';
+            iframe.style.height = '80%';
+            restoreBtn.style.display = 'none'; // Hide the restore button
         }
     </script>
 
