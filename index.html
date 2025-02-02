@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Browser</title>
-    <!-- Meta Tags for Web App -->
     <meta name="theme-color" content="#007BFF">
     <meta name="apple-mobile-web-app-title" content="Lucas Browser">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -219,8 +218,8 @@
         urlInput.addEventListener('input', () => {
             const url = `https://${urlInput.value}`;
             if (activeTab) {
-                activeTab.url = url;
-                iframe.src = url;
+                activeTab.url = url;  // Save URL as a variable
+                iframe.src = url;     // Load the URL in the iframe
             }
         });
 
