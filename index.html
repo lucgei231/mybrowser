@@ -33,6 +33,7 @@
             padding: 10px;
             background-color: #f1f1f1;
             flex-wrap: wrap;
+            margin-right: 100px; /* To make space for the New Tab button */
         }
         .tab {
             padding: 10px;
@@ -95,7 +96,9 @@
             color: white;
             border: none;
             cursor: pointer;
-            margin-top: 10px;
+            position: fixed; /* Position fixed to right of screen */
+            top: 10px;
+            right: 10px;
         }
     </style>
 </head>
@@ -138,7 +141,7 @@
             { name: 'New Tab', url: 'about:blank', active: true }
         ];
 
-        function createTab(name, url) {
+        function createTab(name, url, isNewTab = false) {
             const tab = document.createElement('div');
             tab.classList.add('tab');
             tab.setAttribute('data-url', url);
@@ -147,7 +150,32 @@
             span.textContent = name;
             tab.appendChild(span);
 
-            // Create and add the close "X" button
+            // Prevent renaming the "New Tab" button
+            if (name !== 'New Tab') {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = name;
+                input.style.display = 'none';
+                input.addEventListener('blur', () => {
+                    const tabData = tabs.find(t => t.url === url);
+                    if (tabData) {
+                        tabData.name = input.value;
+                        span.textContent = input.value;
+                    }
+                    input.style.display = 'none';
+                    span.style.display = 'inline';
+                });
+                tab.appendChild(input);
+
+                // Enable renaming the tab on click
+                tab.addEventListener('dblclick', () => {
+                    span.style.display = 'none';
+                    input.style.display = 'inline';
+                    input.focus();
+                });
+            }
+
+            // Add close button (X)
             const closeBtn = document.createElement('span');
             closeBtn.classList.add('close-btn');
             closeBtn.textContent = 'X';
@@ -156,30 +184,12 @@
 
             tab.addEventListener('click', () => activateTab(tab, url));
 
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = name;
-            input.style.display = 'none';
-            input.addEventListener('blur', () => {
-                const tabData = tabs.find(t => t.url === url);
-                if (tabData) {
-                    tabData.name = input.value;
-                    span.textContent = input.value;
-                }
-                input.style.display = 'none';
-                span.style.display = 'inline';
-            });
-
-            tab.appendChild(input);
-
-            // Enable renaming the tab on click
-            tab.addEventListener('dblclick', () => {
-                span.style.display = 'none';
-                input.style.display = 'inline';
-                input.focus();
-            });
-
             tabsContainer.appendChild(tab);
+
+            // If it's a new tab, immediately activate it
+            if (isNewTab) {
+                activateTab(tab, url);
+            }
         }
 
         function activateTab(tab, url) {
@@ -193,8 +203,7 @@
         function addTab() {
             const newTab = { name: 'New Tab', url: 'about:blank', active: false };
             tabs.push(newTab);
-            createTab(newTab.name, newTab.url);
-            activateTab(tabsContainer.lastChild, newTab.url);
+            createTab(newTab.name, newTab.url, true);
         }
 
         function closeTab(event, url) {
