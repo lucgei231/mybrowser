@@ -206,8 +206,15 @@
             restoreBtn.style.display = 'none';
         });
 
-        // Add initial tab
+        // Add the initial "New Tab"
         addTab();
+
+        // Button for Adding New Tab
+        const newTabBtn = document.createElement('button');
+        newTabBtn.textContent = "New Tab";
+        newTabBtn.addEventListener('click', addTab);
+        document.body.appendChild(newTabBtn);
+
     </script>
 
 </body>
