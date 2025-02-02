@@ -16,26 +16,6 @@
     <!-- Green Circle SVG as Favicon -->
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53MzIuZGVzaWduL3JlYWRhdGQteXVpMjgK4vRHgZXJv" />
 
-    <!-- Embedded Manifest JSON -->
-    <script type="application/json" id="manifest">
-        {
-            "name": "URL in Iframe",
-            "short_name": "IframeApp",
-            "description": "A simple web app that lets you open URLs in a dynamic iframe with tabs.",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#f0f0f0",
-            "theme_color": "#007BFF",
-            "icons": [
-                {
-                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53MzIuZGVzaW5l=",
-                    "sizes": "192x192",
-                    "type": "image/svg+xml"
-                }
-            ]
-        }
-    </script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,6 +52,14 @@
             text-align: center;
             color: white;
         }
+        .tab .close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 16px;
+            color: red;
+            cursor: pointer;
+        }
         #iframe-container {
             position: relative;
         }
@@ -101,6 +89,14 @@
         .full-screen iframe {
             height: 100vh;
         }
+        #new-tab-btn {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -115,7 +111,8 @@
     <!-- Tabs Section -->
     <div class="tabs" id="tabs">
         <div class="tab active" data-url="about:blank">
-            <input type="text" value="New Tab" />
+            <span>New Tab</span>
+            <span class="close-btn" onclick="closeTab(event, 'about:blank')">X</span>
         </div>
     </div>
 
@@ -126,12 +123,16 @@
         <button id="restore-btn">Restore</button>
     </div>
 
+    <!-- Button for Adding New Tab -->
+    <button id="new-tab-btn">New Tab</button>
+
     <script>
         const tabsContainer = document.getElementById('tabs');
         const iframe = document.getElementById('iframe');
         const urlInput = document.getElementById('url-input');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const restoreBtn = document.getElementById('restore-btn');
+        const newTabBtn = document.getElementById('new-tab-btn');
 
         let tabs = [
             { name: 'New Tab', url: 'about:blank', active: true }
@@ -140,18 +141,44 @@
         function createTab(name, url) {
             const tab = document.createElement('div');
             tab.classList.add('tab');
+            tab.setAttribute('data-url', url);
+
+            const span = document.createElement('span');
+            span.textContent = name;
+            tab.appendChild(span);
+
+            // Create and add the close "X" button
+            const closeBtn = document.createElement('span');
+            closeBtn.classList.add('close-btn');
+            closeBtn.textContent = 'X';
+            closeBtn.addEventListener('click', (e) => closeTab(e, url));
+            tab.appendChild(closeBtn);
+
+            tab.addEventListener('click', () => activateTab(tab, url));
+
             const input = document.createElement('input');
             input.type = 'text';
             input.value = name;
+            input.style.display = 'none';
             input.addEventListener('blur', () => {
                 const tabData = tabs.find(t => t.url === url);
                 if (tabData) {
                     tabData.name = input.value;
-                    input.disabled = true;
+                    span.textContent = input.value;
                 }
+                input.style.display = 'none';
+                span.style.display = 'inline';
             });
+
             tab.appendChild(input);
-            tab.addEventListener('click', () => activateTab(tab, url));
+
+            // Enable renaming the tab on click
+            tab.addEventListener('dblclick', () => {
+                span.style.display = 'none';
+                input.style.display = 'inline';
+                input.focus();
+            });
+
             tabsContainer.appendChild(tab);
         }
 
@@ -170,7 +197,9 @@
             activateTab(tabsContainer.lastChild, newTab.url);
         }
 
-        function removeTab(tabElement, url) {
+        function closeTab(event, url) {
+            event.stopPropagation();  // Prevent tab click action
+            const tabElement = event.target.closest('.tab');
             const index = tabs.findIndex(t => t.url === url);
             if (index !== -1) {
                 tabs.splice(index, 1);
@@ -207,13 +236,10 @@
         });
 
         // Add the initial "New Tab"
-        addTab();
+        createTab('New Tab', 'about:blank');
 
-        // Button for Adding New Tab
-        const newTabBtn = document.createElement('button');
-        newTabBtn.textContent = "New Tab";
+        // Add New Tab Button functionality
         newTabBtn.addEventListener('click', addTab);
-        document.body.appendChild(newTabBtn);
 
     </script>
 
