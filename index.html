@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Browser</title>
-
     <!-- Meta Tags for Web App -->
     <meta name="theme-color" content="#007BFF">
     <meta name="apple-mobile-web-app-title" content="Lucas Browser">
@@ -12,9 +11,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="A simple web app that lets you open URLs in a dynamic iframe with tabs.">
     <meta name="author" content="Your Name">
-
-    <!-- Green Circle SVG as Favicon -->
-    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53MzIuZGVzaWduL3JlYWRhdGQteXVpMjgK4vRHgZXJv" />
 
     <style>
         body {
@@ -133,6 +129,7 @@
         const newTabBtn = document.getElementById('new-tab-btn');
 
         let tabs = [];
+        let activeTab = null;
 
         // Function to create a tab
         function createTab(name, url, isNewTab = false) {
@@ -187,14 +184,11 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
 
-            const activeTab = tabs.find(t => t.url === url);
+            activeTab = tabs.find(t => t.url === url);
             if (activeTab) {
                 iframe.src = activeTab.url;
                 urlInput.value = activeTab.url.replace('https://', '');
             }
-
-            tabs.forEach(t => t.active = false);
-            tabs.find(t => t.url === url).active = true;
         }
 
         // Function to add a new tab
@@ -224,7 +218,6 @@
         // Handle URL input
         urlInput.addEventListener('input', () => {
             const url = `https://${urlInput.value}`;
-            const activeTab = tabs.find(t => t.active);
             if (activeTab) {
                 activeTab.url = url;
                 iframe.src = url;
@@ -249,7 +242,6 @@
 
         // Add New Tab Button functionality
         newTabBtn.addEventListener('click', addTab);
-
     </script>
 
 </body>
