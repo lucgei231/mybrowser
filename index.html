@@ -52,15 +52,24 @@
             display: flex;
             padding: 10px;
             background-color: #f1f1f1;
+            flex-wrap: wrap;
         }
         .tab {
             padding: 10px;
             margin-right: 5px;
             cursor: pointer;
             background-color: #ddd;
+            position: relative;
         }
         .tab.active {
             background-color: #007BFF;
+            color: white;
+        }
+        .tab input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
             color: white;
         }
         #iframe-container {
@@ -105,7 +114,9 @@
 
     <!-- Tabs Section -->
     <div class="tabs" id="tabs">
-        <div class="tab active" data-url="about:blank">New Tab</div>
+        <div class="tab active" data-url="about:blank">
+            <input type="text" value="New Tab" />
+        </div>
     </div>
 
     <!-- Iframe Container -->
@@ -129,7 +140,17 @@
         function createTab(name, url) {
             const tab = document.createElement('div');
             tab.classList.add('tab');
-            tab.textContent = name;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = name;
+            input.addEventListener('blur', () => {
+                const tabData = tabs.find(t => t.url === url);
+                if (tabData) {
+                    tabData.name = input.value;
+                    input.disabled = true;
+                }
+            });
+            tab.appendChild(input);
             tab.addEventListener('click', () => activateTab(tab, url));
             tabsContainer.appendChild(tab);
         }
@@ -191,4 +212,3 @@
 
 </body>
 </html>
-
