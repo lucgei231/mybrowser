@@ -4,230 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL in Iframe with Dynamic Tabs</title>
+
+    <!-- Meta Tags for Web App -->
+    <meta name="theme-color" content="#007BFF">
+    <meta name="apple-mobile-web-app-title" content="URL in Iframe">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="A simple web app that lets you open URLs in a dynamic iframe with tabs.">
+    <meta name="author" content="Your Name">
+
+    <!-- Green Circle SVG as Favicon -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53MzIuZGVzaWduL3JlYWRhdGQteXVpMjgK4vRHgZXJv" />
+
+    <!-- Embedded Manifest JSON -->
+    <script type="application/json" id="manifest">
+        {
+            "name": "URL in Iframe",
+            "short_name": "IframeApp",
+            "description": "A simple web app that lets you open URLs in a dynamic iframe with tabs.",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#f0f0f0",
+            "theme_color": "#007BFF",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53MzIuZGVzaW5l=",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        }
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-            background-color: #f0f0f0;
+        }
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            text-align: center;
         }
         .tabs {
             display: flex;
-            background-color: #333;
-            width: 100%;
-            justify-content: center;
-            margin: 10px 0;
+            padding: 10px;
+            background-color: #f1f1f1;
         }
         .tab {
-            padding: 14px 20px;
-            cursor: pointer;
-            color: white;
-            background-color: #333;
-            border: 1px solid #ccc;
-            display: flex;
-            align-items: center;
-            transition: background-color 0.3s;
-        }
-        .tab:hover {
-            background-color: #575757;
-        }
-        .active {
-            background-color: #007BFF;
-        }
-        .close-btn {
-            margin-left: 8px;
-            cursor: pointer;
-            color: #f00;
-        }
-        .tab input {
-            background-color: transparent;
-            border: none;
-            color: white;
-            width: 60px;
-            text-align: center;
-            font-size: 14px;
-            margin-right: 8px;
-        }
-        #urlInput {
-            width: 60%;
             padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            margin-right: 5px;
+            cursor: pointer;
+            background-color: #ddd;
+        }
+        .tab.active {
+            background-color: #007BFF;
+            color: white;
+        }
+        #iframe-container {
+            position: relative;
         }
         iframe {
-            width: 80%;
-            height: 80%;
-            border: none;
-            transition: all 0.3s ease;
+            width: 100%;
+            height: 80vh;
         }
-        .add-tab-btn, .fullscreen-btn {
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            margin-top: 20px;
-            margin-right: 10px;
-        }
-        .fullscreen-btn {
-            background-color: #007BFF;
-        }
-        .fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 9999;
-            border: none;
-        }
-        .restore-btn {
+        #fullscreen-btn {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #FF5733;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: #007BFF;
             color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            display: none;
-            z-index: 10000; /* Ensure it's above the iframe */
         }
-        .restore-btn:hover {
-            background-color: #C0392B;
+        #restore-btn {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .full-screen iframe {
+            height: 100vh;
         }
     </style>
 </head>
 <body>
 
-    <h1>Dynamic Tabs for URLs</h1>
+    <header>
+        <h1>Iframe Browser with Dynamic Tabs</h1>
+    </header>
 
+    <!-- URL Input -->
+    <input type="text" id="url-input" placeholder="Enter URL (without https://)" style="width: 70%; padding: 5px; margin: 10px;">
+
+    <!-- Tabs Section -->
     <div class="tabs" id="tabs">
-        <div class="tab active" onclick="switchTab(this)">
-            <input type="text" value="Tab 1" onchange="renameTab(this)" />
-            <span class="close-btn" onclick="closeTab(event, this)">x</span>
-        </div>
+        <div class="tab active" data-url="about:blank">New Tab</div>
     </div>
 
-    <button class="add-tab-btn" onclick="addTab()">Add Tab</button>
-    <button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
-
-    <input type="text" id="urlInput" placeholder="Enter URL here" oninput="updateIframe()">
-    <iframe id="iframe" src="" title="Iframe"></iframe>
-
-    <button class="restore-btn" id="restoreBtn" onclick="restoreIframe()">Restore</button>
+    <!-- Iframe Container -->
+    <div id="iframe-container">
+        <iframe id="iframe" src="about:blank"></iframe>
+        <button id="fullscreen-btn">Fullscreen</button>
+        <button id="restore-btn">Restore</button>
+    </div>
 
     <script>
-        let tabCount = 1;
-        const tabURLs = {}; // Object to store URLs for each tab
+        const tabsContainer = document.getElementById('tabs');
         const iframe = document.getElementById('iframe');
-        const urlInput = document.getElementById('urlInput');
-        const restoreBtn = document.getElementById('restoreBtn');
+        const urlInput = document.getElementById('url-input');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const restoreBtn = document.getElementById('restore-btn');
 
-        // Automatically adds 'https://' if missing and updates the iframe
-        function updateIframe() {
-            let url = urlInput.value.trim();
-            if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
-                url = "https://" + url;
-            }
-            iframe.src = url ? url : ''; // Only set the iframe source if there's a URL
-            const activeTab = document.querySelector('.active');
-            const tabName = activeTab.querySelector('input').value;
-            tabURLs[tabName] = url; // Save the URL for the current tab
+        let tabs = [
+            { name: 'New Tab', url: 'about:blank', active: true }
+        ];
+
+        function createTab(name, url) {
+            const tab = document.createElement('div');
+            tab.classList.add('tab');
+            tab.textContent = name;
+            tab.addEventListener('click', () => activateTab(tab, url));
+            tabsContainer.appendChild(tab);
+        }
+
+        function activateTab(tab, url) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            iframe.src = url;
+            tabs.forEach(t => t.active = false);
+            tabs.find(t => t.url === url).active = true;
         }
 
         function addTab() {
-            tabCount++;
-            const tabsContainer = document.getElementById('tabs');
-            const newTab = document.createElement('div');
-            newTab.classList.add('tab');
-            newTab.innerHTML = `
-                <input type="text" value="Tab ${tabCount}" onchange="renameTab(this)" />
-                <span class="close-btn" onclick="closeTab(event, this)">x</span>
-            `;
-            newTab.onclick = () => switchTab(newTab);
-            tabsContainer.appendChild(newTab);
+            const newTab = { name: 'New Tab', url: 'about:blank', active: false };
+            tabs.push(newTab);
+            createTab(newTab.name, newTab.url);
+            activateTab(tabsContainer.lastChild, newTab.url);
         }
 
-        function switchTab(tab) {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            const tabName = tab.querySelector('input').value;
-            urlInput.value = tabURLs[tabName] || ''; // Load URL from saved URL if available
-            updateIframe();
-        }
-
-        function closeTab(event, tab) {
-            event.stopPropagation();
-            const tabName = tab.parentElement.querySelector('input').value;
-            delete tabURLs[tabName]; // Remove the URL of the closed tab from the saved object
-
-            tab.parentNode.removeChild(tab);
-            const tabs = document.querySelectorAll('.tab');
-            if (tabs.length > 0) {
-                tabs[tabs.length - 1].classList.add('active');
-                const lastTabName = tabs[tabs.length - 1].querySelector('input').value;
-                urlInput.value = tabURLs[lastTabName] || '';
-                updateIframe();
-            } else {
-                iframe.src = '';
-                urlInput.value = '';
-            }
-        }
-
-        function renameTab(input) {
-            const tab = input.parentElement;
-            const tabName = input.value;
-            const activeTab = document.querySelector('.active');
-            if (activeTab === tab) {
-                updateIframe();
-            }
-        }
-
-        // When a link is clicked inside the iframe, update the URL input
-        iframe.addEventListener('load', function () {
-            iframe.contentWindow.document.body.addEventListener('click', function (event) {
-                if (event.target.tagName === 'A' && event.target.href) {
-                    urlInput.value = event.target.href;
-                    updateIframe();
+        function removeTab(tabElement, url) {
+            const index = tabs.findIndex(t => t.url === url);
+            if (index !== -1) {
+                tabs.splice(index, 1);
+                tabsContainer.removeChild(tabElement);
+                if (tabs.length === 0) {
+                    addTab();
+                } else {
+                    activateTab(tabsContainer.firstChild, tabs[0].url);
                 }
-            });
+            }
+        }
+
+        // Handle URL input
+        urlInput.addEventListener('change', () => {
+            const url = `https://${urlInput.value}`;
+            const activeTab = tabs.find(t => t.active);
+            if (activeTab) {
+                activeTab.url = url;
+                iframe.src = url;
+            }
         });
 
-        // Toggle fullscreen for iframe
-        function toggleFullscreen() {
-            if (iframe.classList.contains('fullscreen')) {
-                iframe.classList.remove('fullscreen');
-                iframe.style.width = '80%';
-                iframe.style.height = '80%';
-                restoreBtn.style.display = 'none'; // Hide the restore button when exiting fullscreen
-            } else {
-                iframe.classList.add('fullscreen');
-                iframe.style.width = '100vw';
-                iframe.style.height = '100vh';
-                restoreBtn.style.display = 'block'; // Show the restore button when in fullscreen
-            }
-        }
+        // Fullscreen and Restore functionality
+        fullscreenBtn.addEventListener('click', () => {
+            document.body.classList.add('full-screen');
+            fullscreenBtn.style.display = 'none';
+            restoreBtn.style.display = 'block';
+        });
 
-        // Restore the iframe to its normal size
-        function restoreIframe() {
-            iframe.classList.remove('fullscreen');
-            iframe.style.width = '80%';
-            iframe.style.height = '80%';
-            restoreBtn.style.display = 'none'; // Hide the restore button
-        }
+        restoreBtn.addEventListener('click', () => {
+            document.body.classList.remove('full-screen');
+            fullscreenBtn.style.display = 'block';
+            restoreBtn.style.display = 'none';
+        });
+
+        // Add initial tab
+        addTab();
     </script>
 
 </body>
 </html>
+
