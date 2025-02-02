@@ -95,6 +95,19 @@
             top: 10px;
             right: 10px;
         }
+        #nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +118,13 @@
 
     <!-- URL Input -->
     <input type="text" id="url-input" placeholder="Enter URL (without https://)" style="width: 70%; padding: 5px; margin: 10px;">
+
+    <!-- Navigation Buttons -->
+    <div id="nav-buttons">
+        <button id="back-btn">Back</button>
+        <button id="forward-btn">Forward</button>
+        <button id="reload-btn">Reload</button>
+    </div>
 
     <!-- Tabs Section -->
     <div class="tabs" id="tabs"></div>
@@ -126,9 +146,14 @@
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const restoreBtn = document.getElementById('restore-btn');
         const newTabBtn = document.getElementById('new-tab-btn');
+        const backBtn = document.getElementById('back-btn');
+        const forwardBtn = document.getElementById('forward-btn');
+        const reloadBtn = document.getElementById('reload-btn');
 
         let tabs = [];  // Store tabs as objects
         let activeTabIndex = 0;
+        let historyStack = []; // To save navigation history for back/forward
+        let currentHistoryIndex = -1;
 
         // Function to create a tab
         function createTab(name, url, isNewTab = false) {
@@ -187,6 +212,7 @@
             if (activeTabIndex !== -1) {
                 iframe.src = tabs[activeTabIndex].url;
                 urlInput.value = tabs[activeTabIndex].url.replace('https://', '');
+                updateHistory(tabs[activeTabIndex].url);
             }
         }
 
@@ -220,8 +246,44 @@
             if (tabs[activeTabIndex]) {
                 tabs[activeTabIndex].url = url;  // Save URL as a variable
                 iframe.src = url;     // Load the URL in the iframe
+                updateHistory(url);
             }
         });
+
+        // Back button
+        backBtn.addEventListener('click', () => {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                iframe.src = historyStack[currentHistoryIndex];
+                urlInput.value = historyStack[currentHistoryIndex].replace('https://', '');
+            }
+        });
+
+        // Forward button
+        forwardBtn.addEventListener('click', () => {
+            if (currentHistoryIndex < historyStack.length - 1) {
+                currentHistoryIndex++;
+                iframe.src = historyStack[currentHistoryIndex];
+                urlInput.value = historyStack[currentHistoryIndex].replace('https://', '');
+            }
+        });
+
+        // Reload button
+        reloadBtn.addEventListener('click', () => {
+            iframe.src = iframe.src;
+        });
+
+        // Function to update the navigation history
+        function updateHistory(url) {
+            if (currentHistoryIndex === historyStack.length - 1) {
+                historyStack.push(url);
+                currentHistoryIndex++;
+            } else {
+                historyStack = historyStack.slice(0, currentHistoryIndex + 1);
+                historyStack.push(url);
+                currentHistoryIndex++;
+            }
+        }
 
         // Fullscreen and Restore functionality
         fullscreenBtn.addEventListener('click', () => {
