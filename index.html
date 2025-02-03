@@ -177,7 +177,11 @@
                 document.exitFullscreen();
             }
         }
-        
+
+        document.getElementById("browser-frame").addEventListener("load", function() {
+            document.getElementById("url-input").value = this.contentWindow.location.href.replace("https://", "");
+        });
+
         addTab();
     </script>
 </body>
