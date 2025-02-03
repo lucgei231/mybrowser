@@ -68,6 +68,13 @@
             height: 80vh;
             border: none;
         }
+        #url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 0;
+            display: block;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -78,8 +85,10 @@
         <button onclick="goForward()">➡️</button>
         <button onclick="reloadPage()">🔄</button>
         <button onclick="addTab()">➕ New Tab</button>
+        <button onclick="renameTab()">✏️ Rename Tab</button>
+        <button onclick="toggleFullscreen()">🖥️ Fullscreen</button>
     </div>
-    <input type="text" id="url-input" placeholder="Enter URL..." onkeydown="handleEnter(event)" style="width: 80%; padding: 10px;">
+    <input type="text" id="url-input" placeholder="Enter URL..." onkeydown="handleEnter(event)">
     <iframe id="browser-frame" src="about:blank"></iframe>
     
     <script>
@@ -131,6 +140,14 @@
             }
         }
 
+        function renameTab() {
+            const newName = prompt("Enter new tab name:", tabs[activeTabIndex].name);
+            if (newName) {
+                tabs[activeTabIndex].name = newName;
+                updateTabs();
+            }
+        }
+
         function handleEnter(event) {
             if (event.key === "Enter") {
                 let url = document.getElementById("url-input").value;
@@ -150,6 +167,15 @@
         }
         function reloadPage() {
             document.getElementById("browser-frame").contentWindow.location.reload();
+        }
+
+        function toggleFullscreen() {
+            const iframe = document.getElementById("browser-frame");
+            if (!document.fullscreenElement) {
+                iframe.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
         }
         
         addTab();
