@@ -4,312 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Browser</title>
-    <meta name="theme-color" content="#007BFF">
+    <meta name="theme-color" content="#ff66cc">
     <meta name="apple-mobile-web-app-title" content="Lucas Browser">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="A simple web app that lets you open URLs in a dynamic iframe with tabs.">
-    <meta name="author" content="Your Name">
-
-    <!-- Font Awesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
+    <meta name="description" content="A simple web app browser with tabs.">
+    
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background: linear-gradient(to right, pink, purple);
+            color: white;
         }
         header {
-            background-color: #007BFF;
-            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
             padding: 10px;
             text-align: center;
+            font-size: 24px;
         }
-        .tabs {
+        .tabs-container {
             display: flex;
+            background-color: rgba(255, 255, 255, 0.2);
             padding: 10px;
-            background-color: #f1f1f1;
-            flex-wrap: wrap;
-            margin-right: 100px; /* To make space for the New Tab button */
+            overflow-x: auto;
         }
         .tab {
-            padding: 10px;
-            margin-right: 5px;
+            background: white;
+            color: black;
+            padding: 8px 15px;
+            margin: 5px;
             cursor: pointer;
-            background-color: #ddd;
-            position: relative;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
         }
         .tab.active {
-            background-color: #007BFF;
+            background: blue;
             color: white;
         }
-        .tab input {
-            width: 100%;
-            border: none;
-            background: transparent;
-            text-align: center;
-            color: white;
-        }
-        .tab .close-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            font-size: 16px;
-            color: red;
+        .close-btn {
+            margin-left: 8px;
             cursor: pointer;
+            color: red;
+            font-weight: bold;
         }
-        #iframe-container {
-            position: relative;
+        .controls {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
         }
         iframe {
             width: 100%;
             height: 80vh;
-        }
-        #fullscreen-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-        }
-        #restore-btn {
-            display: none;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-        }
-        .full-screen iframe {
-            height: 100vh;
-        }
-        #new-tab-btn {
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
             border: none;
-            cursor: pointer;
-            position: fixed; /* Position fixed to right of screen */
-            top: 10px;
-            right: 10px;
-        }
-        #nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 10px;
-            justify-content: center;
-        }
-        button {
-            padding: 10px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-        }
-        .nav-button {
-            font-size: 18px;
         }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>Lucas Browser</h1>
-    </header>
-
-    <!-- URL Input -->
-    <input type="text" id="url-input" placeholder="Enter URL (without https://)" style="width: 70%; padding: 5px; margin: 10px;">
-
-    <!-- Navigation Buttons -->
-    <div id="nav-buttons">
-        <button id="back-btn" class="nav-button"><i class="fas fa-arrow-left"></i></button>
-        <button id="forward-btn" class="nav-button"><i class="fas fa-arrow-right"></i></button>
-        <button id="reload-btn" class="nav-button"><i class="fas fa-sync-alt"></i></button>
+    <header>Lucas Browser</header>
+    <div class="tabs-container" id="tabs-container"></div>
+    <div class="controls">
+        <button onclick="goBack()">⬅️</button>
+        <button onclick="goForward()">➡️</button>
+        <button onclick="reloadPage()">🔄</button>
+        <button onclick="addTab()">➕ New Tab</button>
     </div>
-
-    <!-- Tabs Section -->
-    <div class="tabs" id="tabs"></div>
-
-    <!-- Iframe Container -->
-    <div id="iframe-container">
-        <iframe id="iframe" src="about:blank"></iframe>
-        <button id="fullscreen-btn">Fullscreen</button>
-        <button id="restore-btn">Restore</button>
-    </div>
-
-    <!-- Button for Adding New Tab -->
-    <button id="new-tab-btn">New Tab</button>
-
+    <input type="text" id="url-input" placeholder="Enter URL..." onkeydown="handleEnter(event)" style="width: 80%; padding: 10px;">
+    <iframe id="browser-frame" src="about:blank"></iframe>
+    
     <script>
-        const tabsContainer = document.getElementById('tabs');
-        const iframe = document.getElementById('iframe');
-        const urlInput = document.getElementById('url-input');
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const restoreBtn = document.getElementById('restore-btn');
-        const newTabBtn = document.getElementById('new-tab-btn');
-        const backBtn = document.getElementById('back-btn');
-        const forwardBtn = document.getElementById('forward-btn');
-        const reloadBtn = document.getElementById('reload-btn');
-
-        let tabs = [];  // Store tabs as objects
+        let tabs = [];
         let activeTabIndex = 0;
-        let historyStack = []; // To save navigation history for back/forward
-        let currentHistoryIndex = -1;
 
-        // Function to create a tab
-        function createTab(name, url, isNewTab = false) {
-            const tab = document.createElement('div');
-            tab.classList.add('tab');
-            tab.setAttribute('data-url', url);
-
-            const span = document.createElement('span');
-            span.textContent = name;
-            tab.appendChild(span);
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = name;
-            input.style.display = 'none';
-            input.addEventListener('blur', () => {
-                const tabData = tabs[activeTabIndex];
-                if (tabData) {
-                    tabData.name = input.value;
-                    span.textContent = input.value;
-                }
-                input.style.display = 'none';
-                span.style.display = 'inline';
-            });
-            tab.appendChild(input);
-
-            tab.addEventListener('dblclick', () => {
-                span.style.display = 'none';
-                input.style.display = 'inline';
-                input.focus();
-            });
-
-            // Add close button (X)
-            const closeBtn = document.createElement('span');
-            closeBtn.classList.add('close-btn');
-            closeBtn.textContent = 'X';
-            closeBtn.addEventListener('click', (e) => closeTab(e, url));
-            tab.appendChild(closeBtn);
-
-            tab.addEventListener('click', () => activateTab(tab, url));
-
-            tabsContainer.appendChild(tab);
-
-            // If it's a new tab, immediately activate it
-            if (isNewTab) {
-                activateTab(tab, url);
-            }
-        }
-
-        // Function to activate a tab and load its URL
-        function activateTab(tab, url) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            activeTabIndex = tabs.findIndex(t => t.url === url);
-            if (activeTabIndex !== -1) {
-                iframe.src = tabs[activeTabIndex].url;
-                urlInput.value = tabs[activeTabIndex].url.replace('https://', '');
-                updateHistory(tabs[activeTabIndex].url);
-            }
-        }
-
-        // Function to add a new tab
         function addTab() {
-            const newTab = { name: 'New Tab', url: 'about:blank' };
-            tabs.push(newTab);
-            createTab(newTab.name, newTab.url, true);
+            const tabData = { name: "New Tab", url: "about:blank" };
+            tabs.push(tabData);
+            updateTabs();
+            setActiveTab(tabs.length - 1);
         }
 
-        // Function to close a tab
-        function closeTab(event, url) {
-            event.stopPropagation();  // Prevent tab click action
-            const tabElement = event.target.closest('.tab');
-            const index = tabs.findIndex(t => t.url === url);
-            if (index !== -1) {
+        function updateTabs() {
+            const container = document.getElementById("tabs-container");
+            container.innerHTML = "";
+            tabs.forEach((tab, index) => {
+                const tabElement = document.createElement("div");
+                tabElement.className = "tab" + (index === activeTabIndex ? " active" : "");
+                tabElement.textContent = tab.name;
+                tabElement.onclick = () => setActiveTab(index);
+                
+                const closeButton = document.createElement("span");
+                closeButton.className = "close-btn";
+                closeButton.textContent = "✖";
+                closeButton.onclick = (event) => {
+                    event.stopPropagation();
+                    closeTab(index);
+                };
+                
+                tabElement.appendChild(closeButton);
+                container.appendChild(tabElement);
+            });
+        }
+
+        function setActiveTab(index) {
+            activeTabIndex = index;
+            document.getElementById("browser-frame").src = tabs[index].url;
+            document.getElementById("url-input").value = tabs[index].url.replace("https://", "");
+            updateTabs();
+        }
+
+        function closeTab(index) {
+            if (tabs.length > 1) {
                 tabs.splice(index, 1);
-                tabsContainer.removeChild(tabElement);
-                if (tabs.length === 0) {
-                    addTab();  // Add a new tab if no tabs left
-                } else {
-                    // Activate the first tab if the current tab is closed
-                    activateTab(tabsContainer.firstChild, tabs[0].url);
+                activeTabIndex = Math.max(0, index - 1);
+                updateTabs();
+                setActiveTab(activeTabIndex);
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                let url = document.getElementById("url-input").value;
+                if (!url.startsWith("http")) {
+                    url = "https://" + url;
                 }
+                tabs[activeTabIndex].url = url;
+                document.getElementById("browser-frame").src = url;
             }
         }
 
-        // Handle URL input and update iframe content
-        urlInput.addEventListener('input', () => {
-            const url = `https://${urlInput.value}`;
-            if (tabs[activeTabIndex]) {
-                tabs[activeTabIndex].url = url;  // Save URL as a variable
-                iframe.src = url;     // Load the URL in the iframe
-                updateHistory(url);
-            }
-        });
-
-        // Back button
-        backBtn.addEventListener('click', () => {
-            if (currentHistoryIndex > 0) {
-                currentHistoryIndex--;
-                iframe.src = historyStack[currentHistoryIndex];
-                urlInput.value = historyStack[currentHistoryIndex].replace('https://', '');
-            }
-        });
-
-        // Forward button
-        forwardBtn.addEventListener('click', () => {
-            if (currentHistoryIndex < historyStack.length - 1) {
-                currentHistoryIndex++;
-                iframe.src = historyStack[currentHistoryIndex];
-                urlInput.value = historyStack[currentHistoryIndex].replace('https://', '');
-            }
-        });
-
-        // Reload button
-        reloadBtn.addEventListener('click', () => {
-            iframe.src = iframe.src;
-        });
-
-        // Function to update the navigation history
-        function updateHistory(url) {
-            if (currentHistoryIndex === historyStack.length - 1) {
-                historyStack.push(url);
-                currentHistoryIndex++;
-            } else {
-                historyStack = historyStack.slice(0, currentHistoryIndex + 1);
-                historyStack.push(url);
-                currentHistoryIndex++;
-            }
+        function goBack() {
+            document.getElementById("browser-frame").contentWindow.history.back();
         }
-
-        // Fullscreen and Restore functionality
-        fullscreenBtn.addEventListener('click', () => {
-            document.body.classList.add('full-screen');
-            fullscreenBtn.style.display = 'none';
-            restoreBtn.style.display = 'block';
-        });
-
-        restoreBtn.addEventListener('click', () => {
-            document.body.classList.remove('full-screen');
-            fullscreenBtn.style.display = 'block';
-            restoreBtn.style.display = 'none';
-        });
-
-        // Add the initial "New Tab"
+        function goForward() {
+            document.getElementById("browser-frame").contentWindow.history.forward();
+        }
+        function reloadPage() {
+            document.getElementById("browser-frame").contentWindow.location.reload();
+        }
+        
         addTab();
-
-        // Add New Tab Button functionality
-        newTabBtn.addEventListener('click', addTab);
     </script>
-
 </body>
 </html>
