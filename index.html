@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Browser</title>
     <meta name="theme-color" content="#ff66cc">
-    <meta name="apple-mobile-web-app-title" content="Lucas Browser">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="A simple web app browser with tabs.">
-    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,6 +70,18 @@
             display: block;
             box-sizing: border-box;
         }
+        .settings-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -87,16 +94,46 @@
         <button onclick="addTab()">➕ New Tab</button>
         <button onclick="renameTab()">✏️ Rename Tab</button>
         <button onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+        <button onclick="toggleSettings()">⚙️ Settings</button>
     </div>
     <input type="text" id="url-input" placeholder="Enter URL..." onkeydown="handleEnter(event)">
     <iframe id="browser-frame" src="about:blank"></iframe>
     
+    <div class="settings-popup" id="settings-popup">
+        <h3>Settings</h3>
+        <label><input type="checkbox" id="auto-rename" checked> Auto Rename Tabs</label><br>
+        <label><input type="checkbox" id="show-favicons" checked> Show Favicons</label><br>
+        <label><input type="checkbox" id="show-tab-list" checked> Show Tab List</label><br>
+        <button onclick="toggleSettings()">Close</button>
+    </div>
+    
     <script>
         let tabs = [];
         let activeTabIndex = 0;
+        let settings = {
+            autoRename: true,
+            showFavicons: true,
+            showTabList: true
+        };
+
+        function toggleSettings() {
+            const popup = document.getElementById("settings-popup");
+            popup.style.display = popup.style.display === "block" ? "none" : "block";
+        }
+
+        function applySettings() {
+            settings.autoRename = document.getElementById("auto-rename").checked;
+            settings.showFavicons = document.getElementById("show-favicons").checked;
+            settings.showTabList = document.getElementById("show-tab-list").checked;
+            updateTabs();
+        }
+
+        document.querySelectorAll(".settings-popup input").forEach(input => {
+            input.addEventListener("change", applySettings);
+        });
 
         function addTab() {
-            const tabData = { name: "New Tab", url: "about:blank" };
+            const tabData = { name: "New Tab", url: "about:blank", favicon: "" };
             tabs.push(tabData);
             updateTabs();
             setActiveTab(tabs.length - 1);
@@ -105,6 +142,8 @@
         function updateTabs() {
             const container = document.getElementById("tabs-container");
             container.innerHTML = "";
+            if (!settings.showTabList) return;
+            
             tabs.forEach((tab, index) => {
                 const tabElement = document.createElement("div");
                 tabElement.className = "tab" + (index === activeTabIndex ? " active" : "");
@@ -118,7 +157,6 @@
                     event.stopPropagation();
                     closeTab(index);
                 };
-                
                 tabElement.appendChild(closeButton);
                 container.appendChild(tabElement);
             });
@@ -126,61 +164,17 @@
 
         function setActiveTab(index) {
             activeTabIndex = index;
-            document.getElementById("browser-frame").src = tabs[index].url;
+            document.getElementById("browser-frame").src = tabs[index].url || "about:blank";
             document.getElementById("url-input").value = tabs[index].url.replace("https://", "");
             updateTabs();
         }
 
         function closeTab(index) {
-            if (tabs.length > 1) {
-                tabs.splice(index, 1);
-                activeTabIndex = Math.max(0, index - 1);
-                updateTabs();
-                setActiveTab(activeTabIndex);
-            }
+            tabs.splice(index, 1);
+            activeTabIndex = Math.max(0, activeTabIndex - 1);
+            updateTabs();
+            if (tabs.length > 0) setActiveTab(activeTabIndex);
         }
-
-        function renameTab() {
-            const newName = prompt("Enter new tab name:", tabs[activeTabIndex].name);
-            if (newName) {
-                tabs[activeTabIndex].name = newName;
-                updateTabs();
-            }
-        }
-
-        function handleEnter(event) {
-            if (event.key === "Enter") {
-                let url = document.getElementById("url-input").value;
-                if (!url.startsWith("http")) {
-                    url = "https://" + url;
-                }
-                tabs[activeTabIndex].url = url;
-                document.getElementById("browser-frame").src = url;
-            }
-        }
-
-        function goBack() {
-            document.getElementById("browser-frame").contentWindow.history.back();
-        }
-        function goForward() {
-            document.getElementById("browser-frame").contentWindow.history.forward();
-        }
-        function reloadPage() {
-            document.getElementById("browser-frame").contentWindow.location.reload();
-        }
-
-        function toggleFullscreen() {
-            const iframe = document.getElementById("browser-frame");
-            if (!document.fullscreenElement) {
-                iframe.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        document.getElementById("browser-frame").addEventListener("load", function() {
-            document.getElementById("url-input").value = this.contentWindow.location.href.replace("https://", "");
-        });
 
         addTab();
     </script>
