@@ -97,7 +97,7 @@
         <button onclick="toggleSettings()">⚙️ Settings</button>
     </div>
     <input type="text" id="url-input" placeholder="Enter URL..." onkeydown="handleEnter(event)">
-    <iframe id="browser-frame" src="about:blank"></iframe>
+    <iframe id="browser-frame"></iframe>
     
     <div class="settings-popup" id="settings-popup">
         <h3>Settings</h3>
@@ -133,7 +133,7 @@
         });
 
         function addTab() {
-            const tabData = { name: "New Tab", url: "about:blank", favicon: "" };
+            const tabData = { name: "New Tab", url: "", favicon: "" };
             tabs.push(tabData);
             updateTabs();
             setActiveTab(tabs.length - 1);
@@ -147,13 +147,24 @@
             tabs.forEach((tab, index) => {
                 const tabElement = document.createElement("div");
                 tabElement.className = "tab" + (index === activeTabIndex ? " active" : "");
-                tabElement.textContent = tab.name;
+                
+                // Show favicon if enabled
+                if (settings.showFavicons && tab.favicon) {
+                    const faviconImg = document.createElement("img");
+                    faviconImg.src = tab.favicon;
+                    faviconImg.alt = "Favicon";
+                    faviconImg.style.width = "16px";
+                    faviconImg.style.height = "16px";
+                    tabElement.appendChild(faviconImg);
+                }
+
+                tabElement.appendChild(document.createTextNode(tab.name));
                 tabElement.onclick = () => setActiveTab(index);
                 
                 const closeButton = document.createElement("span");
                 closeButton.className = "close-btn";
                 closeButton.textContent = "✖";
-                closeButton.onclick = (event) => {
+                closeButton.onclick = function(event) {
                     event.stopPropagation();
                     closeTab(index);
                 };
@@ -165,8 +176,12 @@
         function setActiveTab(index) {
             activeTabIndex = index;
             document.getElementById("browser-frame").src = tabs[index].url || "about:blank";
-            document.getElementById("url-input").value = tabs[index].url.replace("https://", "");
+            document.getElementById("url-input").value = tabs[index].url;
             updateTabs();
+            if (settings.autoRename) {
+                tabs[index].name = new URL(tabs[index].url).hostname; // auto-rename tab to the URL's hostname
+                updateTabs();
+            }
         }
 
         function closeTab(index) {
@@ -174,6 +189,34 @@
             activeTabIndex = Math.max(0, activeTabIndex - 1);
             updateTabs();
             if (tabs.length > 0) setActiveTab(activeTabIndex);
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                let url = document.getElementById("url-input").value;
+
+                // Check if the URL starts with http:// or https://, if not, add https://
+                if (!/^https?:\/\//i.test(url)) {
+                    url = "https://" + url;
+                }
+
+                if (!url) return;
+                tabs[activeTabIndex].url = url;
+                setActiveTab(activeTabIndex);
+
+                // Optionally, you can update the input field to show the URL without https://
+                const visibleUrl = url.replace(/^https?:\/\//, '');
+                document.getElementById("url-input").value = visibleUrl;
+            }
+        }
+
+        function toggleFullscreen() {
+            const iframe = document.getElementById("browser-frame");
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                iframe.requestFullscreen();
+            }
         }
 
         addTab();
