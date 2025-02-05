@@ -178,8 +178,15 @@
             document.getElementById("browser-frame").src = tabs[index].url || "about:blank";
             document.getElementById("url-input").value = tabs[index].url;
             updateTabs();
+
             if (settings.autoRename) {
-                tabs[index].name = new URL(tabs[index].url).hostname; // auto-rename tab to the URL's hostname
+                // Extract hostname and remove .com
+                let hostname = new URL(tabs[index].url).hostname.replace('.com', '');
+                
+                // Capitalize the first letter
+                hostname = hostname.charAt(0).toUpperCase() + hostname.slice(1);
+                
+                tabs[index].name = hostname; // Update the tab name
                 updateTabs();
             }
         }
